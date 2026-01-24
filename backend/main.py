@@ -13,6 +13,9 @@ from datetime import datetime
 from database.connection import db
 from database.models import AITool, ToolStats
 from scheduler.daily_job import daily_job
+from scraper.producthunt_ingest import ingest_producthunt
+from scraper.huggingface_ingest import ingest_huggingface
+from scraper.github_ingest import ingest_github
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -202,19 +205,34 @@ async def get_categories():
 @app.post("/api/scan/manual")
 async def trigger_manual_scan():
     """
-    Manually trigger the daily scan
+    Manually trigger the daily scan with detailed results
     (For testing - in production would be scheduled)
     
     Returns:
-        Scan results
+        Scan results with ingestion stats for each source
     """
     try:
         logger.info("Manual scan triggered")
-        await daily_job.run_daily_scan()
+        
+        # Run ingestion for each source
+        hf_result = ingest_huggingface()
+        gh_result = ingest_github()
+        # Product Hunt - DISABLED (blocks bots, requires login)
+        # ph_result = ingest_producthunt()
+        
         return {
             "status": "success",
             "message": "Manual scan completed",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "results": {
+                "huggingface": hf_result,
+                "github": gh_result
+                # "producthunt": ph_result  # Disabled
+            },
+            "summary": {
+                "total_scraped": hf_result.get("total_scraped", 0) + gh_result.get("total_scraped", 0),
+                "total_inserted": hf_result.get("total_inserted", 0) + gh_result.get("total_inserted", 0)
+            }
         }
     
     except Exception as e:
@@ -242,6 +260,38 @@ async def trigger_test_scan():
     except Exception as e:
         logger.error(f"Test scan failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Test scan failed: {str(e)}")
+
+@app.get("/api/scan/logs")
+async def get_scan_logs(limit: int = 10):
+    """
+    Get recent scan logs
+    
+    Query Parameters:
+    - limit: Number of logs to return (default: 10)
+    
+    Returns:
+        List of recent scan results
+    """
+    try:
+        # For now, return a simulated log
+        # In production, this would query a logs table
+        return {
+            "logs": [
+                {
+                    "id": 1,
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "manual",
+                    "status": "success",
+                    "huggingface": {"inserted": 5, "scraped": 10},
+                    "producthunt": {"inserted": 2, "scraped": 3}
+                }
+            ][:limit],
+            "note": "Full scan history requires a logs table in database"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching scan logs: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch scan logs")
 
 # ============== STARTUP/SHUTDOWN EVENTS ==============
 

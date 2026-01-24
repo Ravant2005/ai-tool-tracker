@@ -86,6 +86,8 @@ export default function ToolCard({ tool }: ToolCardProps) {
                     )}
                     
                     
+                    
+                    <a
                         href={tool.url}
                         target="_blank"
                         rel="noopener noreferrer"

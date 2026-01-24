@@ -10,11 +10,13 @@ from typing import List, Dict
 
 # Import our modules
 import sys
-sys.path.append('..')
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scraper.github_scraper import github_scraper
-from scraper.producthunt_scraper import producthunt_scraper
-from scraper.huggingface_scraper import huggingface_scraper
+from scraper.producthunt_ingest import ingest_producthunt
+from scraper.huggingface_ingest import ingest_huggingface
+from scraper.github_ingest import ingest_github
 from ai_engine.analyzer import ai_analyzer
 from database.connection import db
 from database.models import AITool
@@ -28,162 +30,124 @@ class DailyJob:
     """
     
     def __init__(self):
-        self.sources = {
-            'github': github_scraper,
-            'producthunt': producthunt_scraper,
-            'huggingface': huggingface_scraper
+        # Use ingestion layers instead of direct scrapers
+        self.ingestion_sources = {
+            'producthunt': ingest_producthunt,
+            'huggingface': ingest_huggingface,
+            'github': ingest_github
         }
     
     async def run_daily_scan(self):
         """
-        Main daily job - scrapes all sources and analyzes tools
+        Main daily job - runs ingestion and analyzes tools
         """
         logger.info("=" * 60)
-        logger.info("🚀 STARTING DAILY AI TOOL SCAN")
+        logger.info("STARTING DAILY AI TOOL SCAN")
         logger.info(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info("=" * 60)
         
-        all_tools = []
+        all_ingestion_results = {}
         
-        # Step 1: Scrape all sources
-        logger.info("\n📡 PHASE 1: WEB SCRAPING")
+        # Step 1: Run ingestion for each source
+        logger.info("\nPHASE 1: INGESTION (Scraping + DB Storage)")
         
         try:
+            # Product Hunt - DISABLED (blocks bots, requires login)
+            # logger.info("\nRunning Product Hunt ingestion...")
+            # ph_result = ingest_producthunt()
+            # all_ingestion_results['producthunt'] = ph_result
+            # logger.info(f"   PH Result: inserted={ph_result.get('inserted', 0)}, scraped={ph_result.get('scraped', 0)}")
+            
+            # Hugging Face
+            logger.info("\nRunning Hugging Face ingestion...")
+            hf_result = ingest_huggingface()
+            all_ingestion_results['huggingface'] = hf_result
+            logger.info(f"   HF Result: inserted={hf_result.get('total_inserted', 0)}, scraped={hf_result.get('total_scraped', 0)}")
+            
             # GitHub
-            logger.info("\n🔍 Scraping GitHub Trending...")
-            github_tools = github_scraper.scrape_trending_ai_repos()
-            all_tools.extend(github_tools)
-            logger.info(f"Found {len(github_tools)} GitHub repos")
+            logger.info("\nRunning GitHub ingestion...")
+            gh_result = ingest_github()
+            all_ingestion_results['github'] = gh_result
+            logger.info(f"   GH Result: inserted={gh_result.get('total_inserted', 0)}, scraped={gh_result.get('total_scraped', 0)}")
             
-            # Product Hunt
-            logger.info("\n🔍 Scraping Product Hunt...")
-            ph_tools = producthunt_scraper.scrape_ai_products()
-            all_tools.extend(ph_tools)
-            logger.info(f"Found {len(ph_tools)} Product Hunt launches")
-            
-            # Hugging Face Models
-            logger.info("\n🔍 Scraping Hugging Face Models...")
-            hf_models = huggingface_scraper.scrape_trending_models(limit=15)
-            all_tools.extend(hf_models)
-            logger.info(f"Found {len(hf_models)} HF models")
-            
-            # Hugging Face Spaces
-            logger.info("\n🔍 Scraping Hugging Face Spaces...")
-            hf_spaces = huggingface_scraper.scrape_trending_spaces(limit=10)
-            all_tools.extend(hf_spaces)
-            logger.info(f"Found {len(hf_spaces)} HF spaces")
-        
         except Exception as e:
-            logger.error(f"❌ Error during scraping: {str(e)}")
+            logger.error(f"Error during ingestion: {str(e)}")
         
-        logger.info(f"\n✅ Total tools collected: {len(all_tools)}")
+        # Step 2: Get newly inserted tools from database
+        logger.info("\nPHASE 2: AI ANALYSIS")
         
-        # Step 2: AI Analysis
-        logger.info("\n🤖 PHASE 2: AI ANALYSIS")
-        
-        analyzed_tools = []
-        for i, tool_data in enumerate(all_tools, 1):
-            try:
-                logger.info(f"\nAnalyzing {i}/{len(all_tools)}: {tool_data.get('name', 'Unknown')}")
-                
-                # Run AI analysis
-                analyzed = ai_analyzer.analyze_tool(tool_data)
-                analyzed_tools.append(analyzed)
-                
-                logger.info(f"  ✅ Hype Score: {analyzed.get('hype_score', 0)}/100")
-                logger.info(f"  📊 Category: {analyzed.get('category', 'Unknown')}")
-                logger.info(f"  💰 Pricing: {analyzed.get('pricing', 'Unknown')}")
+        try:
+            # Get tools discovered today
+            new_tools = await db.get_trending_today()
+            logger.info(f"Found {len(new_tools)} new tools to analyze")
             
-            except Exception as e:
-                logger.error(f"  ❌ Analysis failed: {str(e)}")
-                continue
-        
-        logger.info(f"\n✅ Analyzed {len(analyzed_tools)} tools")
-        
-        # Step 3: Save to Database
-        logger.info("\n💾 PHASE 3: DATABASE STORAGE")
-        
-        saved_count = 0
-        updated_count = 0
-        
-        for tool_data in analyzed_tools:
-            try:
-                # Check if tool already exists
-                existing = await db.get_tool_by_name(tool_data.get('name', ''))
-                
-                if existing:
-                    # Update existing tool
+            analyzed_count = 0
+            for tool in new_tools:
+                try:
+                    # Run AI analysis
+                    updated_data = ai_analyzer.analyze_tool(tool)
+                    
+                    # Update the tool with AI analysis
                     await db.update_tool(
-                        existing['id'],
+                        tool['id'],
                         {
-                            'hype_score': tool_data.get('hype_score'),
-                            'description': tool_data.get('description'),
+                            'summary': updated_data.get('summary'),
+                            'use_cases': updated_data.get('use_cases', []),
+                            'category': updated_data.get('category'),
+                            'hype_score': updated_data.get('hype_score', tool.get('hype_score', 50)),
+                            'pricing': updated_data.get('pricing'),
                             'updated_at': datetime.now().isoformat()
                         }
                     )
-                    updated_count += 1
-                    logger.info(f"  🔄 Updated: {tool_data.get('name')}")
-                else:
-                    # Create new tool
-                    ai_tool = AITool(
-                        name=tool_data.get('name', 'Unknown'),
-                        description=tool_data.get('description', ''),
-                        url=tool_data.get('url', 'https://example.com'),
-                        source=tool_data.get('source', 'unknown'),
-                        summary=tool_data.get('summary'),
-                        use_cases=tool_data.get('use_cases', []),
-                        category=tool_data.get('category'),
-                        hype_score=tool_data.get('hype_score', 0),
-                        github_stars=tool_data.get('stars', 0),
-                        pricing=tool_data.get('pricing', 'unknown'),
-                        tags=tool_data.get('tags', [])
-                    )
-                    
-                    await db.insert_tool(ai_tool)
-                    saved_count += 1
-                    logger.info(f"  ✅ Saved: {tool_data.get('name')}")
+                    analyzed_count += 1
+                    logger.info(f"  Analyzed: {tool.get('name')}")
+                
+                except Exception as e:
+                    logger.error(f"  Analysis failed for {tool.get('name')}: {str(e)}")
+                    continue
             
-            except Exception as e:
-                logger.error(f"  ❌ Database error: {str(e)}")
-                continue
+            logger.info(f"\nAnalyzed {analyzed_count} tools")
         
-        # Final summary
+        except Exception as e:
+            logger.error(f"Error during AI analysis: {str(e)}")
+        
+        # Step 3: Final summary
+        total_inserted = sum(
+            r.get('inserted', 0) if isinstance(r, dict) else r.get('total_inserted', 0) 
+            for r in all_ingestion_results.values()
+        )
+        total_scraped = sum(
+            r.get('scraped', 0) if isinstance(r, dict) else r.get('total_scraped', 0) 
+            for r in all_ingestion_results.values()
+        )
+        
         logger.info("\n" + "=" * 60)
-        logger.info("🎉 DAILY SCAN COMPLETE!")
-        logger.info(f"📊 Summary:")
-        logger.info(f"   • Tools scraped: {len(all_tools)}")
-        logger.info(f"   • Tools analyzed: {len(analyzed_tools)}")
-        logger.info(f"   • New tools saved: {saved_count}")
-        logger.info(f"   • Existing tools updated: {updated_count}")
-        logger.info(f"   • Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info("DAILY SCAN COMPLETE!")
+        logger.info(f"Summary:")
+        logger.info(f"   Sources processed: {len(all_ingestion_results)}")
+        logger.info(f"   Total tools scraped: {total_scraped}")
+        logger.info(f"   New tools inserted: {total_inserted}")
+        logger.info(f"   Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info("=" * 60)
     
     async def test_run(self):
         """
         Test run with limited scraping (for development)
         """
-        logger.info("🧪 TEST RUN - Limited scraping")
+        logger.info("TEST RUN - Limited ingestion")
         
-        # Just scrape 2-3 items from each source
-        all_tools = []
+        # Hugging Face ingestion  
+        hf_result = ingest_huggingface()
         
-        # GitHub (top 3)
-        github_tools = github_scraper.scrape_trending_ai_repos()[:3]
-        all_tools.extend(github_tools)
+        # GitHub ingestion
+        gh_result = ingest_github()
         
-        # Hugging Face models (top 3)
-        hf_models = huggingface_scraper.scrape_trending_models(limit=3)
-        all_tools.extend(hf_models)
+        logger.info(f"Test results: HF={hf_result}, GH={gh_result}")
         
-        logger.info(f"Test scraped {len(all_tools)} tools")
-        
-        # Analyze first tool only
-        if all_tools:
-            test_tool = all_tools[0]
-            analyzed = ai_analyzer.analyze_tool(test_tool)
-            logger.info(f"Test analysis: {analyzed}")
-        
-        return all_tools
+        return {
+            "huggingface": hf_result,
+            "github": gh_result
+        }
 
 # Create job instance
 daily_job = DailyJob()
@@ -192,3 +156,4 @@ daily_job = DailyJob()
 if __name__ == "__main__":
     # Run the daily job
     asyncio.run(daily_job.run_daily_scan())
+

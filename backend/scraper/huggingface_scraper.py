@@ -28,7 +28,7 @@ class HuggingFaceScraper:
             limit: Number of models to fetch
         
         Returns:
-            List of model data
+            List of model data sorted by likes (trending)
         """
         logger.info("🔍 Scraping Hugging Face models...")
         
@@ -36,8 +36,9 @@ class HuggingFaceScraper:
             # Hugging Face API endpoint for models
             url = f"{self.api_base}/models"
             
+            # Note: HuggingFace API doesn't support 'sort=trending'
+            # We fetch models and manually sort by likes
             params = {
-                'sort': 'trending',  # Get trending models
                 'limit': limit,
                 'full': 'true'  # Get full model info
             }
@@ -46,6 +47,18 @@ class HuggingFaceScraper:
             response.raise_for_status()
             
             models_data = response.json()
+            
+            # Log raw count for debugging
+            logger.info(f"🧪 HuggingFace raw models count: {len(models_data)}")
+            
+            # Manually sort by likes to get trending models
+            models_data = sorted(
+                models_data,
+                key=lambda x: x.get('likes', 0),
+                reverse=True
+            )
+            
+            logger.info(f"🧪 HuggingFace sorted models (top 5 likes): {[m.get('likes', 0) for m in models_data[:5]]}")
             
             models = []
             for model in models_data:
@@ -73,15 +86,16 @@ class HuggingFaceScraper:
             limit: Number of spaces to fetch
         
         Returns:
-            List of space data
+            List of space data sorted by likes (trending)
         """
         logger.info("🔍 Scraping Hugging Face Spaces...")
         
         try:
             url = f"{self.api_base}/spaces"
             
+            # Note: HuggingFace API doesn't support 'sort=trending'
+            # We fetch spaces and manually sort by likes
             params = {
-                'sort': 'trending',
                 'limit': limit,
                 'full': 'true'
             }
@@ -90,6 +104,18 @@ class HuggingFaceScraper:
             response.raise_for_status()
             
             spaces_data = response.json()
+            
+            # Log raw count for debugging
+            logger.info(f"🧪 HuggingFace raw spaces count: {len(spaces_data)}")
+            
+            # Manually sort by likes to get trending spaces
+            spaces_data = sorted(
+                spaces_data,
+                key=lambda x: x.get('likes', 0),
+                reverse=True
+            )
+            
+            logger.info(f"🧪 HuggingFace sorted spaces (top 5 likes): {[s.get('likes', 0) for s in spaces_data[:5]]}")
             
             spaces = []
             for space in spaces_data:

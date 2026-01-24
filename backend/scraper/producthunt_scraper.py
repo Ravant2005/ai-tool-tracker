@@ -44,25 +44,39 @@ class ProductHuntScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             
             products = []
+            ai_filtered_products = []
             
             # Find product cards (Note: PH structure changes often)
             # This is a simplified scraper - real implementation might need updates
             product_links = soup.find_all('a', href=True)
             
-            visited_urls = set()
+            logger.info(f"🔍 Found {len(product_links)} total links on page")
             
-            for link in product_links[:30]:  # Check first 30 links
+            visited_urls = set()
+            scraped_count = 0
+            ai_related_count = 0
+            
+            for link in product_links[:50]:  # Check first 50 links (increased for better coverage)
                 href = link.get('href', '')
                 
                 # Product Hunt URLs look like: /posts/product-name
                 if '/posts/' in href and href not in visited_urls:
                     visited_urls.add(href)
+                    scraped_count += 1
                     
                     try:
                         product_data = self._scrape_product_page(href)
-                        if product_data and self._is_ai_related(product_data):
-                            products.append(product_data)
-                            logger.info(f"✅ Found AI product: {product_data['name']}")
+                        
+                        if product_data:
+                            # Check if AI-related BEFORE adding
+                            is_ai = self._is_ai_related(product_data)
+                            
+                            if is_ai:
+                                ai_related_count += 1
+                                products.append(product_data)
+                                logger.info(f"✅ Found AI product: {product_data['name']} | URL: {product_data['url']}")
+                            else:
+                                logger.debug(f"⏭️ Skipped non-AI product: {product_data.get('name', 'Unknown')}")
                     
                     except Exception as e:
                         logger.error(f"Error scraping product: {str(e)}")
@@ -74,6 +88,15 @@ class ProductHuntScraper:
                     # Limit to 10 products per run
                     if len(products) >= 10:
                         break
+            
+            # DEBUG: Log what we found BEFORE returning
+            logger.info(f"🧪 Raw products scraped: {scraped_count}")
+            logger.info(f"🧪 Products passing AI filter: {ai_related_count}")
+            logger.info(f"🧪 Final products returned: {len(products)}")
+            
+            # Log sample of products for debugging
+            for p in products[:5]:
+                logger.info(f"🧪 Product: {p['name']} | {p['url']}")
             
             logger.info(f"✅ Found {len(products)} AI products")
             return products
