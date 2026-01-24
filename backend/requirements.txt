@@ -11,6 +11,8 @@ lxml==4.9.3
 
 # Database
 supabase==2.0.3
+
+# Environment
 python-dotenv==1.0.0
 
 # Scheduling
@@ -19,6 +21,3 @@ apscheduler==3.10.4
 # Utilities
 python-dateutil==2.8.2
 pytz==2023.3
-
-# HTTP Client
-httpx==0.25.2
