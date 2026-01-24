@@ -52,14 +52,21 @@ class Database:
             # Convert tool to dictionary
             tool_data = tool.model_dump(exclude={'id'})
             
+            logger.debug(f"Inserting tool: {tool.name}")
+            logger.debug(f"Tool data: {tool_data}")
+            
             # Insert into 'ai_tools' table
             response = self.client.table('ai_tools').insert(tool_data).execute()
             
-            logger.info(f"✅ Tool '{tool.name}' saved to database")
-            return response.data[0]
+            if response.data and len(response.data) > 0:
+                logger.info(f"✅ Tool '{tool.name}' saved to database (ID: {response.data[0].get('id')})")
+                return response.data[0]
+            else:
+                logger.error(f"❌ Insert returned empty response for tool '{tool.name}'")
+                raise ValueError("Insert succeeded but no data returned")
         
         except Exception as e:
-            logger.error(f"❌ Error saving tool: {str(e)}")
+            logger.error(f"❌ Error saving tool '{tool.name}': {type(e).__name__}: {str(e)}")
             raise
     
     async def get_all_tools(self, limit: int = 100) -> List[dict]:
@@ -97,17 +104,25 @@ class Database:
             Tool data if found, None otherwise
         """
         try:
+            if not name or name.strip() == '':
+                logger.debug("Empty name provided to get_tool_by_name")
+                return None
+            
+            logger.debug(f"Searching for tool: '{name}'")
             response = self.client.table('ai_tools')\
                 .select("*")\
                 .eq('name', name)\
                 .execute()
             
-            if response.data:
+            if response.data and len(response.data) > 0:
+                logger.debug(f"Found existing tool: {name}")
                 return response.data[0]
+            
+            logger.debug(f"No existing tool found: {name}")
             return None
         
         except Exception as e:
-            logger.error(f"❌ Error searching tool: {str(e)}")
+            logger.error(f"❌ Error searching tool by name '{name}': {type(e).__name__}: {str(e)}")
             return None
     
     async def update_tool(self, tool_id: int, updates: dict) -> dict:
