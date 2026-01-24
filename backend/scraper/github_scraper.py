@@ -40,12 +40,10 @@ class GitHubScraper:
         try:
             # Build URL with language and "ai" topic filter
             url = f"{self.base_url}/{language}?since=daily"
-            logger.debug(f"GitHub URL: {url}")
             
             # Make request
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
-            logger.info(f"✅ GitHub HTTP {response.status_code}")
             
             # Parse HTML
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -54,37 +52,29 @@ class GitHubScraper:
             repos = []
             repo_articles = soup.find_all('article', class_='Box-row')
             
-            logger.info(f"📊 Found {len(repo_articles)} total trending repos on page")
+            logger.info(f"Found {len(repo_articles)} trending repos")
             
-            if len(repo_articles) == 0:
-                logger.warning("⚠️  No articles found - GitHub page structure may have changed")
-            
-            for idx, article in enumerate(repo_articles[:20], 1):  # Get top 20
+            for article in repo_articles[:20]:  # Get top 20
                 try:
                     repo_data = self._parse_repo_card(article)
                     
                     # Filter for AI-related repos
                     if self._is_ai_related(repo_data):
                         repos.append(repo_data)
-                        logger.info(f"✅ [{idx}] AI repo: {repo_data['name']} | ⭐ {repo_data.get('stars', 0)}")
-                    else:
-                        logger.debug(f"[{idx}] Skipped (not AI): {repo_data['name']}")
+                        logger.info(f"✅ Found AI repo: {repo_data['name']}")
                 
                 except Exception as e:
-                    logger.error(f"❌ Error parsing repo #{idx}: {str(e)}")
+                    logger.error(f"Error parsing repo: {str(e)}")
                     continue
                 
                 # Be polite - small delay between processing
                 time.sleep(0.5)
             
-            logger.info(f"🎯 Found {len(repos)} AI-related repos out of {len(repo_articles)} total")
+            logger.info(f"✅ Found {len(repos)} AI-related repos")
             return repos
         
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ HTTP Error scraping GitHub: {type(e).__name__}: {str(e)}")
-            return []
         except Exception as e:
-            logger.error(f"❌ Error scraping GitHub: {type(e).__name__}: {str(e)}", exc_info=True)
+            logger.error(f"❌ Error scraping GitHub: {str(e)}")
             return []
     
     def _parse_repo_card(self, article) -> Dict:

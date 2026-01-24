@@ -206,30 +206,20 @@ async def trigger_manual_scan():
     (For testing - in production would be scheduled)
     
     Returns:
-        Scan results with detailed metrics
+        Scan results
     """
     try:
-        logger.info("=" * 70)
-        logger.info("📲 MANUAL SCAN TRIGGERED VIA API")
-        logger.info("=" * 70)
-        
+        logger.info("Manual scan triggered")
         await daily_job.run_daily_scan()
-        
-        logger.info("✅ Manual scan completed successfully")
-        
         return {
             "status": "success",
-            "message": "Manual scan completed. Check server logs for detailed results.",
-            "timestamp": datetime.now().isoformat(),
-            "tip": "Run /api/scan/test for a quick test with limited data"
+            "message": "Manual scan completed",
+            "timestamp": datetime.now().isoformat()
         }
     
     except Exception as e:
-        logger.error(f"❌ Manual scan failed: {type(e).__name__}: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Scan failed: {str(e)}. Check server logs for details."
-        )
+        logger.error(f"Manual scan failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
 
 @app.post("/api/scan/test")
 async def trigger_test_scan():

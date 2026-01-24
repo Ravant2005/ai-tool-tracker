@@ -35,7 +35,6 @@ class HuggingFaceScraper:
         try:
             # Hugging Face API endpoint for models
             url = f"{self.api_base}/models"
-            logger.debug(f"HF URL: {url}")
             
             params = {
                 'sort': 'trending',  # Get trending models
@@ -45,30 +44,25 @@ class HuggingFaceScraper:
             
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
-            logger.info(f"✅ HF HTTP {response.status_code}")
             
             models_data = response.json()
-            logger.info(f"📊 API returned {len(models_data)} models")
             
             models = []
-            for idx, model in enumerate(models_data, 1):
+            for model in models_data:
                 try:
                     model_info = self._parse_model(model)
                     models.append(model_info)
-                    logger.info(f"✅ [{idx}] Model: {model_info['name']} | 👍 {model_info.get('likes', 0)}")
+                    logger.info(f"✅ Found model: {model_info['name']}")
                 
                 except Exception as e:
-                    logger.error(f"❌ Error parsing model #{idx}: {str(e)}")
+                    logger.error(f"Error parsing model: {str(e)}")
                     continue
             
-            logger.info(f"🎯 Processed {len(models)} models successfully")
+            logger.info(f"✅ Found {len(models)} trending models")
             return models
         
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ HTTP Error scraping HF models: {type(e).__name__}: {str(e)}")
-            return []
         except Exception as e:
-            logger.error(f"❌ Error scraping HF models: {type(e).__name__}: {str(e)}", exc_info=True)
+            logger.error(f"❌ Error scraping Hugging Face: {str(e)}")
             return []
     
     def scrape_trending_spaces(self, limit: int = 10) -> List[Dict]:
@@ -85,7 +79,6 @@ class HuggingFaceScraper:
         
         try:
             url = f"{self.api_base}/spaces"
-            logger.debug(f"HF Spaces URL: {url}")
             
             params = {
                 'sort': 'trending',
@@ -95,31 +88,15 @@ class HuggingFaceScraper:
             
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
-            logger.info(f"✅ HF Spaces HTTP {response.status_code}")
             
             spaces_data = response.json()
-            logger.info(f"📊 API returned {len(spaces_data)} spaces")
             
             spaces = []
-            for idx, space in enumerate(spaces_data, 1):
+            for space in spaces_data:
                 try:
                     space_info = self._parse_space(space)
                     spaces.append(space_info)
-                    logger.info(f"✅ [{idx}] Space: {space_info['name']} | 👍 {space_info.get('likes', 0)}")
-                
-                except Exception as e:
-                    logger.error(f"❌ Error parsing space #{idx}: {str(e)}")
-                    continue
-            
-            logger.info(f"🎯 Processed {len(spaces)} spaces successfully")
-            return spaces
-        
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ HTTP Error scraping HF spaces: {type(e).__name__}: {str(e)}")
-            return []
-        except Exception as e:
-            logger.error(f"❌ Error scraping HF spaces: {type(e).__name__}: {str(e)}", exc_info=True)
-            return []
+                    logger.info(f"✅ Found space: {space_info['name']}")
                 
                 except Exception as e:
                     logger.error(f"Error parsing space: {str(e)}")
