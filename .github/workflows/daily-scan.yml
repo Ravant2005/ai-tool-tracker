@@ -1,0 +1,43 @@
+name: Daily AI Tool Scan
+
+on:
+  # Run every day at 12:00 UTC
+  schedule:
+    - cron: '0 12 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  scan-tools:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      
+      - name: Run daily scan
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+        run: |
+          cd backend
+          python -c "
+          import asyncio
+          from scheduler.daily_job import daily_job
+          asyncio.run(daily_job.run_daily_scan())
+          "
+      
+      - name: Scan complete
+        run: echo "Daily scan completed successfully!"
