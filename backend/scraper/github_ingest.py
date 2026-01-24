@@ -25,13 +25,14 @@ def ingest_github():
     Returns:
         dict: Ingestion statistics for repos
     """
-    logger.info("🚀 Starting GitHub ingestion")
+    logger.info("Starting GitHub ingestion")
     
     try:
         # STEP 1: Run the scraper (Python repos with AI filter)
         repos = github_scraper.scrape_trending_ai_repos(language="python")
         
-        logger.info(f"🧪 GitHub Scraping returned {len(repos)} repos")
+        # Log raw count BEFORE processing
+        logger.info(f"GitHub Scraping returned {len(repos)} repos")
         
         # STEP 2: Track stats
         stats = {
@@ -52,7 +53,7 @@ def ingest_github():
                 
                 if existing.data:
                     stats["skipped"] += 1
-                    logger.debug(f"⏭️ Skipped duplicate repo: {repo['name']}")
+                    logger.debug(f"Skipped duplicate repo: {repo['name']}")
                     continue
                 
                 # Create AITool model
@@ -68,24 +69,24 @@ def ingest_github():
                     tags=[repo.get("language", "python"), "ai", "github"]
                 )
                 
-                # Insert to database
+                # Insert to database (only count if successful)
                 result = db.insert_tool(ai_tool)
-                stats["inserted"] += 1
-                
-                logger.info(f"✅ Inserted GitHub repo: {ai_tool.name} | Stars: {repo.get('stars', 0)} | Today: {repo.get('today_stars', 0)}")
+                if result:
+                    stats["inserted"] += 1
+                    logger.info(f"Inserted GitHub repo: {ai_tool.name} | Stars: {repo.get('stars', 0)} | Today: {repo.get('today_stars', 0)}")
             
             except Exception as e:
                 stats["failed"] += 1
-                logger.error(f"❌ Failed to insert repo {repo.get('name', 'Unknown')}: {str(e)}")
+                logger.error(f"Failed to insert repo {repo.get('name', 'Unknown')}: {str(e)}")
                 continue
         
         # STEP 4: Log final summary
         summary = f"""
-🎉 GitHub ingest complete!
-   📊 Total Scraped: {stats['scraped']}
-   ✅ Total Inserted: {stats['inserted']}
-   ⏭️ Total Skipped (duplicates): {stats['skipped']}
-   ❌ Total Failed: {stats['failed']}
+GitHub ingest complete!
+   Total Scraped: {stats['scraped']}
+   Total Inserted: {stats['inserted']}
+   Total Skipped (duplicates): {stats['skipped']}
+   Total Failed: {stats['failed']}
         """
         logger.info(summary)
         
@@ -97,7 +98,7 @@ def ingest_github():
         }
     
     except Exception as e:
-        logger.error(f"❌ GitHub ingest failed: {str(e)}")
+        logger.error(f"GitHub ingest failed: {str(e)}")
         return {
             "status": "error",
             "error": str(e),
@@ -110,5 +111,5 @@ def ingest_github():
 if __name__ == "__main__":
     # Test the ingestion
     result = ingest_github()
-    print(f"\n📋 Ingestion Result: {result}")
+    print(f"\nIngestion Result: {result}")
 

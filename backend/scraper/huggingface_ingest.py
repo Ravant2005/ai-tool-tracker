@@ -67,11 +67,11 @@ def ingest_huggingface():
                     tags=model.get("tags", [])
                 )
                 
-                # Insert to database
+                # Insert to database (only count if successful)
                 result = db.insert_tool(ai_tool)
-                stats["models"]["inserted"] += 1
-                
-                logger.info(f"✅ Inserted HF model: {ai_tool.name} | Likes: {model.get('likes', 0)}")
+                if result:
+                    stats["models"]["inserted"] += 1
+                    logger.info(f"✅ Inserted HF model: {ai_tool.name} | Likes: {model.get('likes', 0)}")
             
             except Exception as e:
                 stats["models"]["failed"] += 1
@@ -104,11 +104,11 @@ def ingest_huggingface():
                     tags=space.get("tags", [])
                 )
                 
-                # Insert to database
+                # Insert to database (only count if successful)
                 result = db.insert_tool(ai_tool)
-                stats["spaces"]["inserted"] += 1
-                
-                logger.info(f"✅ Inserted HF space: {ai_tool.name} | SDK: {space.get('sdk', 'unknown')}")
+                if result:
+                    stats["spaces"]["inserted"] += 1
+                    logger.info(f"✅ Inserted HF space: {ai_tool.name} | SDK: {space.get('sdk', 'unknown')}")
             
             except Exception as e:
                 stats["spaces"]["failed"] += 1

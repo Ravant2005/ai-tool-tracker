@@ -22,7 +22,7 @@ class AITool(BaseModel):
     id: Optional[int] = None
     name: str  # e.g., "ChatGPT"
     description: str  # What the tool does
-    url: HttpUrl  # Website link
+    url: str = Field(..., description="Website link (auto-converted to HttpUrl)")  # Website link
     
     # Discovery Information
     source: str  # Where we found it: "github", "producthunt", etc.
@@ -41,7 +41,7 @@ class AITool(BaseModel):
     
     # Metadata
     tags: Optional[List[str]] = None
-    logo_url: Optional[HttpUrl] = None
+    logo_url: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 

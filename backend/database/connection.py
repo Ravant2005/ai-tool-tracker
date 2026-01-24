@@ -52,14 +52,22 @@ class Database:
             # Convert tool to dictionary
             tool_data = tool.model_dump(exclude={'id'})
             
+            # Log the data being inserted (for debugging)
+            logger.info(f"DB INSERT: {tool.name} | {tool.url} | source={tool.source}")
+            
             # Insert into 'ai_tools' table
             response = self.client.table('ai_tools').insert(tool_data).execute()
             
-            logger.info(f"✅ Tool '{tool.name}' saved to database")
-            return response.data[0]
+            # Check if insert actually succeeded
+            if response.data:
+                logger.info(f"✅ Tool '{tool.name}' saved to database (ID: {response.data[0].get('id')})")
+                return response.data[0]
+            else:
+                logger.error(f"❌ DB insert returned no data for: {tool.name}")
+                raise Exception("Insert returned empty response")
         
         except Exception as e:
-            logger.error(f"❌ Error saving tool: {str(e)}")
+            logger.error(f"❌ Error saving tool '{tool.name}': {str(e)}")
             raise
     
     async def get_all_tools(self, limit: int = 100) -> List[dict]:
