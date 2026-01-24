@@ -31,4 +31,4 @@ httpx>=0.24,<0.25
 
 # Data Processing
 pandas==2.2.0
-numpy==1.26.4
+numpy<2.0
