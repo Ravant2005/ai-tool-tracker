@@ -1,75 +1,49 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required');
+  throw new Error(
+    'NEXT_PUBLIC_API_BASE_URL is not defined. Check Vercel environment variables.'
+  );
 }
 
-// Log the resolved API base URL for debugging
-console.log('🔗 API Base URL:', API_BASE_URL);
-
-// Configure axios with no-cache headers
-const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-    }
-});
-
 interface ToolFilters {
-    category?: string;
-    pricing?: string;
-    limit?: number;
+  category?: string;
+  pricing?: string;
+  limit?: number;
 }
 
 export async function getAllTools(filters: ToolFilters = {}) {
-    try {
-        const params = new URLSearchParams();
-        if (filters.category) params.append('category', filters.category);
-        if (filters.pricing) params.append('pricing', filters.pricing);
-        if (filters.limit) params.append('limit', filters.limit.toString());
-        
-        const response = await apiClient.get(`/api/tools?${params}`);
-        console.log('✅ getAllTools response:', response.data.length, 'tools');
-        return response.data;
-    } catch (error) {
-        console.error('❌ Error fetching tools:', error);
-        return [];
-    }
+  const params = new URLSearchParams();
+
+  if (filters.category) params.append('category', filters.category);
+  if (filters.pricing) params.append('pricing', filters.pricing);
+  if (filters.limit) params.append('limit', filters.limit.toString());
+
+  const response = await axios.get(
+    `${API_BASE_URL}/api/tools?${params.toString()}`
+  );
+  return response.data;
 }
 
 export async function getTrendingTools() {
-    try {
-        const response = await apiClient.get('/api/tools/trending');
-        console.log('✅ getTrendingTools response:', response.data.length, 'tools');
-        return response.data;
-    } catch (error) {
-        console.error('❌ Error fetching trending tools:', error);
-        return [];
-    }
+  const response = await axios.get(
+    `${API_BASE_URL}/api/tools/trending`
+  );
+  return response.data;
 }
 
 export async function getStats() {
-    try {
-        const response = await apiClient.get('/api/stats');
-        console.log('✅ getStats response:', response.data);
-        return response.data;
-    } catch (error) {
-        console.error('❌ Error fetching stats:', error);
-        return { total_tools: 0, new_today: 0, avg_hype_score: 0, top_category: 'N/A' };
-    }
+  const response = await axios.get(
+    `${API_BASE_URL}/api/stats`
+  );
+  return response.data;
 }
 
 export async function getCategories() {
-    try {
-        const response = await apiClient.get('/api/categories');
-        console.log('✅ getCategories response:', response.data.length, 'categories');
-        return response.data;
-    } catch (error) {
-        console.error('❌ Error fetching categories:', error);
-        return [];
-    }
+  const response = await axios.get(
+    `${API_BASE_URL}/api/categories`
+  );
+  return response.data;
 }
