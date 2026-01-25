@@ -6,7 +6,7 @@ Connects to Supabase (our free database)
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
-from typing import List, Optional
+from typing import List, Optional, Any
 from .models import AITool
 import logging
 
@@ -16,6 +16,29 @@ logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
+
+def _normalize_value(v: Any) -> Any:
+    """Convert non-JSON-serializable values to strings"""
+    if v is None:
+        return None
+    elif hasattr(v, 'model_dump'):
+        # It's a Pydantic model
+        return _normalize_dict(v.model_dump())
+    elif isinstance(v, list):
+        return [_normalize_value(item) for item in v]
+    elif isinstance(v, dict):
+        return _normalize_dict(v)
+    elif hasattr(v, '__str__') and not isinstance(v, (str, int, float, bool)):
+        # Convert objects like HttpUrl, Url, etc. to strings
+        return str(v)
+    return v
+
+def _normalize_dict(data: dict) -> dict:
+    """Normalize all values in a dictionary to be JSON serializable"""
+    normalized = {}
+    for k, v in data.items():
+        normalized[k] = _normalize_value(v)
+    return normalized
 
 class Database:
     """
@@ -36,7 +59,7 @@ class Database:
         
         # Create connection to database
         self.client: Client = create_client(supabase_url, supabase_key)
-        logger.info("✅ Database connection established")
+        logger.info("Database connection established")
     
     async def insert_tool(self, tool: AITool) -> dict:
         """
@@ -46,29 +69,33 @@ class Database:
             tool: AITool object with all the data
         
         Returns:
-            The saved tool with its ID
+            The saved tool with its ID, or None if insert failed
         """
         try:
             # Convert tool to dictionary
             tool_data = tool.model_dump(exclude={'id'})
             
+            # Normalize all values to be JSON serializable
+            # This fixes the "Object of type Url is not JSON serializable" error
+            tool_data = _normalize_dict(tool_data)
+            
             # Log the data being inserted (for debugging)
-            logger.info(f"DB INSERT: {tool.name} | {tool.url} | source={tool.source}")
+            logger.info(f"DB INSERT: {tool.name} | {tool_data.get('url', 'N/A')} | source={tool.source}")
             
             # Insert into 'ai_tools' table
             response = self.client.table('ai_tools').insert(tool_data).execute()
             
             # Check if insert actually succeeded
             if response.data:
-                logger.info(f"✅ Tool '{tool.name}' saved to database (ID: {response.data[0].get('id')})")
+                logger.info(f"Tool saved: {tool.name} (ID: {response.data[0].get('id')})")
                 return response.data[0]
             else:
-                logger.error(f"❌ DB insert returned no data for: {tool.name}")
-                raise Exception("Insert returned empty response")
+                logger.error(f"DB insert returned no data for: {tool.name}")
+                return None
         
         except Exception as e:
-            logger.error(f"❌ Error saving tool '{tool.name}': {str(e)}")
-            raise
+            logger.error(f"Error saving tool '{tool.name}': {str(e)}")
+            return None
     
     async def get_all_tools(self, limit: int = 100) -> List[dict]:
         """
@@ -87,11 +114,11 @@ class Database:
                 .limit(limit)\
                 .execute()
             
-            logger.info(f"✅ Retrieved {len(response.data)} tools")
+            logger.info(f"Retrieved {len(response.data)} tools")
             return response.data
         
         except Exception as e:
-            logger.error(f"❌ Error fetching tools: {str(e)}")
+            logger.error(f"Error fetching tools: {str(e)}")
             return []
     
     async def get_tool_by_name(self, name: str) -> Optional[dict]:
@@ -115,7 +142,7 @@ class Database:
             return None
         
         except Exception as e:
-            logger.error(f"❌ Error searching tool: {str(e)}")
+            logger.error(f"Error searching tool: {str(e)}")
             return None
     
     async def update_tool(self, tool_id: int, updates: dict) -> dict:
@@ -130,16 +157,19 @@ class Database:
             Updated tool data
         """
         try:
+            # Normalize updates to be JSON serializable
+            updates = _normalize_dict(updates)
+            
             response = self.client.table('ai_tools')\
                 .update(updates)\
                 .eq('id', tool_id)\
                 .execute()
             
-            logger.info(f"✅ Tool {tool_id} updated")
+            logger.info(f"Tool {tool_id} updated")
             return response.data[0]
         
         except Exception as e:
-            logger.error(f"❌ Error updating tool: {str(e)}")
+            logger.error(f"Error updating tool: {str(e)}")
             raise
     
     async def get_trending_today(self) -> List[dict]:
@@ -162,7 +192,7 @@ class Database:
             return response.data
         
         except Exception as e:
-            logger.error(f"❌ Error fetching trending tools: {str(e)}")
+            logger.error(f"Error fetching trending tools: {str(e)}")
             return []
 
 # Create a global database instance

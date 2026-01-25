@@ -5,7 +5,7 @@ Defines the structure of our data
 
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, Field
 
 class AITool(BaseModel):
     """
@@ -22,7 +22,7 @@ class AITool(BaseModel):
     id: Optional[int] = None
     name: str  # e.g., "ChatGPT"
     description: str  # What the tool does
-    url: str = Field(..., description="Website link (auto-converted to HttpUrl)")  # Website link
+    url: str = Field(default="")  # Website link (string, not HttpUrl)
     
     # Discovery Information
     source: str  # Where we found it: "github", "producthunt", etc.
@@ -41,7 +41,7 @@ class AITool(BaseModel):
     
     # Metadata
     tags: Optional[List[str]] = None
-    logo_url: Optional[str] = None
+    logo_url: Optional[str] = None  # Logo URL (string, not HttpUrl)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
