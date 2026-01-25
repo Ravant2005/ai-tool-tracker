@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
 if (!API_BASE_URL) {
     throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required');
@@ -8,6 +8,16 @@ if (!API_BASE_URL) {
 
 // Log the resolved API base URL for debugging
 console.log('🔗 API Base URL:', API_BASE_URL);
+
+// Configure axios with no-cache headers
+const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    }
+});
 
 interface ToolFilters {
     category?: string;
@@ -22,40 +32,44 @@ export async function getAllTools(filters: ToolFilters = {}) {
         if (filters.pricing) params.append('pricing', filters.pricing);
         if (filters.limit) params.append('limit', filters.limit.toString());
         
-        const response = await axios.get(`${API_BASE_URL}/api/tools?${params}`);
+        const response = await apiClient.get(`/api/tools?${params}`);
+        console.log('✅ getAllTools response:', response.data.length, 'tools');
         return response.data;
     } catch (error) {
-        console.error('Error fetching tools:', error);
+        console.error('❌ Error fetching tools:', error);
         return [];
     }
 }
 
 export async function getTrendingTools() {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/tools/trending`);
+        const response = await apiClient.get('/api/tools/trending');
+        console.log('✅ getTrendingTools response:', response.data.length, 'tools');
         return response.data;
     } catch (error) {
-        console.error('Error fetching trending tools:', error);
+        console.error('❌ Error fetching trending tools:', error);
         return [];
     }
 }
 
 export async function getStats() {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/stats`);
+        const response = await apiClient.get('/api/stats');
+        console.log('✅ getStats response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('❌ Error fetching stats:', error);
         return { total_tools: 0, new_today: 0, avg_hype_score: 0, top_category: 'N/A' };
     }
 }
 
 export async function getCategories() {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/categories`);
+        const response = await apiClient.get('/api/categories');
+        console.log('✅ getCategories response:', response.data.length, 'categories');
         return response.data;
     } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('❌ Error fetching categories:', error);
         return [];
     }
 }

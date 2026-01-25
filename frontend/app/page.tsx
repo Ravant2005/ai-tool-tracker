@@ -12,6 +12,9 @@ import ToolCard from '@/components/ToolCard';
 // Import API functions
 import { getAllTools, getTrendingTools, getStats, getCategories } from '@/lib/api';
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
     const [tools, setTools] = useState<any[]>([]);
     const [trendingTools, setTrendingTools] = useState<any[]>([]);

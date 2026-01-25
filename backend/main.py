@@ -31,7 +31,11 @@ app = FastAPI(
 # Enable CORS (allows frontend to talk to backend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "https://ai-tool-tracker-six.vercel.app",  # Production frontend
+        "https://*.vercel.app",   # All Vercel deployments
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,6 +52,24 @@ async def root():
         "message": "AI Tool Tracker API",
         "status": "running",
         "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring
+    """
+    try:
+        # Test database connection
+        response = db.client.table('ai_tools').select('count').limit(1).execute()
+        db_status = "healthy" if response else "unhealthy"
+    except Exception:
+        db_status = "unhealthy"
+    
+    return {
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "database": db_status,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -81,7 +103,7 @@ async def get_trending_tools():
     """
     try:
         logger.info("Fetching trending tools")
-        tools = await db.get_trending_today()
+        tools = db.get_trending_today()  # Fixed: removed await
         logger.info(f"Found {len(tools)} trending tools")
         return tools
     
@@ -128,7 +150,7 @@ async def get_stats():
         response = db.client.table('ai_tools').select("*").execute()
         tools = response.data
         
-        trending = await db.get_trending_today()
+        trending = db.get_trending_today()  # Fixed: removed await
         
         # Calculate stats
         total_tools = len(tools)
@@ -235,7 +257,7 @@ async def trigger_test_scan():
     """
     try:
         logger.info("Test scan triggered")
-        tools = await daily_job.test_run()
+        tools = daily_job.test_run()  # Fixed: removed await
         return {
             "status": "success",
             "message": "Test scan completed",
@@ -286,11 +308,23 @@ async def startup_event():
     """
     Runs when server starts
     """
+    import os
+    
     logger.info("AI Tool Tracker API Starting...")
     logger.info("=" * 60)
-    logger.info("Server is ready!")
-    logger.info("Visit: http://localhost:8000")
-    logger.info("API Docs: http://localhost:8000/docs")
+    
+    # Environment-aware logging
+    env = os.getenv("ENVIRONMENT", "development")
+    port = os.getenv("PORT", "8000")
+    
+    if env == "development":
+        logger.info(f"Server running locally on port {port}")
+        logger.info(f"Visit: http://localhost:{port}")
+        logger.info(f"API Docs: http://localhost:{port}/docs")
+    else:
+        logger.info(f"Server running in {env} mode")
+        logger.info("API ready for production traffic")
+    
     logger.info("=" * 60)
 
 @app.on_event("shutdown")
