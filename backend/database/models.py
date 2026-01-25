@@ -5,7 +5,7 @@ Defines the structure of our data
 
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class AITool(BaseModel):
     """
@@ -44,6 +44,34 @@ class AITool(BaseModel):
     logo_url: Optional[str] = None  # Logo URL (string, not HttpUrl)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
+    @field_validator("url", "logo_url", mode="before")
+    @classmethod
+    def validate_url_to_string(cls, v):
+        """
+        Convert any URL-type objects to strings for JSON serialization.
+        
+        This handles:
+        - Pydantic HttpUrl/Url objects
+        - httpx.URL objects
+        - Any other URL-like objects
+        """
+        # If it's None or already a string, return as-is
+        if v is None or isinstance(v, str):
+            return v
+        
+        # If it has a __str__ method and looks like a URL object, convert to string
+        if hasattr(v, '__str__'):
+            try:
+                str_value = str(v)
+                # Verify it looks like a URL (basic check)
+                if '://' in str_value:
+                    return str_value
+            except:
+                pass
+        
+        # For any other type, return as-is (let the _normalize_dict handle it later)
+        return v
 
 
 class ToolStats(BaseModel):

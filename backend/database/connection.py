@@ -6,39 +6,94 @@ Connects to Supabase (our free database)
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict, Union
 from .models import AITool
+from datetime import datetime, date
 import logging
 
 # Setup logging to see what's happening
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
-load_dotenv()
 
-def _normalize_value(v: Any) -> Any:
-    """Convert non-JSON-serializable values to strings"""
-    if v is None:
-        return None
-    elif hasattr(v, 'model_dump'):
-        # It's a Pydantic model
-        return _normalize_dict(v.model_dump())
-    elif isinstance(v, list):
-        return [_normalize_value(item) for item in v]
-    elif isinstance(v, dict):
-        return _normalize_dict(v)
-    elif hasattr(v, '__str__') and not isinstance(v, (str, int, float, bool)):
-        # Convert objects like HttpUrl, Url, etc. to strings
-        return str(v)
-    return v
-
-def _normalize_dict(data: dict) -> dict:
-    """Normalize all values in a dictionary to be JSON serializable"""
+def _normalize_dict(data: Dict) -> Dict:
+    """
+    Recursively convert all non-JSON-serializable types to serializable equivalents.
+    
+    This fixes the "Object of type Url is not JSON serializable" error by converting:
+    - Pydantic Url/HttpUrl objects to strings
+    - httpx.URL objects to strings
+    - datetime objects to ISO format strings
+    - date objects to ISO format strings
+    - Any other non-serializable objects to strings
+    
+    Args:
+        data: Dictionary to normalize
+        
+    Returns:
+        Clean dictionary with only JSON-serializable values
+    """
+    if not isinstance(data, dict):
+        return data
+    
     normalized = {}
-    for k, v in data.items():
-        normalized[k] = _normalize_value(v)
+    for key, value in data.items():
+        normalized[key] = _normalize_value(value)
+    
     return normalized
+
+
+def _normalize_value(value: Any) -> Any:
+    """
+    Convert a single value to its JSON-serializable equivalent.
+    
+    Args:
+        value: Any value that might not be JSON serializable
+        
+    Returns:
+        JSON-serializable version of the value
+    """
+    # Handle None
+    if value is None:
+        return None
+    
+    # Handle strings, ints, floats, bools (already JSON serializable)
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    
+    # Handle datetime objects
+    if isinstance(value, datetime):
+        return value.isoformat()
+    
+    # Handle date objects
+    if isinstance(value, date):
+        return value.isoformat()
+    
+    # Handle lists
+    if isinstance(value, list):
+        return [_normalize_value(item) for item in value]
+    
+    # Handle dicts
+    if isinstance(value, dict):
+        return _normalize_dict(value)
+    
+    # Handle Pydantic Url/HttpUrl objects
+    # Check for pydantic URL types by looking for common attributes/methods
+    if hasattr(value, '__str__') and hasattr(value, 'host'):
+        # Likely a URL object - convert to string
+        try:
+            str_value = str(value)
+            # Verify it looks like a URL
+            if str_value.startswith('http://') or str_value.startswith('https://'):
+                return str_value
+        except:
+            pass
+    
+    # Handle any other object by converting to string
+    try:
+        return str(value)
+    except:
+        return None
 
 class Database:
     """
