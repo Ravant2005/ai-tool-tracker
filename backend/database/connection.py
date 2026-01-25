@@ -106,6 +106,7 @@ class Database:
         Initialize connection to Supabase
         Gets URL and KEY from .env file
         """
+        load_dotenv()  # Load environment variables from .env file
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_KEY")
         
@@ -116,7 +117,7 @@ class Database:
         self.client: Client = create_client(supabase_url, supabase_key)
         logger.info("Database connection established")
     
-    async def insert_tool(self, tool: AITool) -> dict:
+    def insert_tool(self, tool: AITool) -> dict:
         """
         Save a new AI tool to database
         
@@ -127,18 +128,17 @@ class Database:
             The saved tool with its ID, or None if insert failed
         """
         try:
-            # Convert tool to dictionary
+            # Convert Pydantic model to a dict, which handles most serialization
             tool_data = tool.model_dump(exclude={'id'})
             
-            # Normalize all values to be JSON serializable
-            # This fixes the "Object of type Url is not JSON serializable" error
-            tool_data = _normalize_dict(tool_data)
+            # Use our robust normalizer for any tricky types
+            normalized_data = _normalize_dict(tool_data)
             
             # Log the data being inserted (for debugging)
-            logger.info(f"DB INSERT: {tool.name} | {tool_data.get('url', 'N/A')} | source={tool.source}")
+            logger.info(f"DB INSERT: {tool.name} | {normalized_data.get('url', 'N/A')} | source={tool.source}")
             
             # Insert into 'ai_tools' table
-            response = self.client.table('ai_tools').insert(tool_data).execute()
+            response = self.client.table('ai_tools').insert(normalized_data).execute()
             
             # Check if insert actually succeeded
             if response.data:
@@ -152,7 +152,7 @@ class Database:
             logger.error(f"Error saving tool '{tool.name}': {str(e)}")
             return None
     
-    async def get_all_tools(self, limit: int = 100) -> List[dict]:
+    def get_all_tools(self, limit: int = 100) -> List[dict]:
         """
         Get all AI tools from database
         
@@ -176,7 +176,7 @@ class Database:
             logger.error(f"Error fetching tools: {str(e)}")
             return []
     
-    async def get_tool_by_name(self, name: str) -> Optional[dict]:
+    def get_tool_by_name(self, name: str) -> Optional[dict]:
         """
         Search for a specific tool by name
         
@@ -200,7 +200,7 @@ class Database:
             logger.error(f"Error searching tool: {str(e)}")
             return None
     
-    async def update_tool(self, tool_id: int, updates: dict) -> dict:
+    def update_tool(self, tool_id: int, updates: dict) -> dict:
         """
         Update an existing tool
         
@@ -227,7 +227,7 @@ class Database:
             logger.error(f"Error updating tool: {str(e)}")
             raise
     
-    async def get_trending_today(self) -> List[dict]:
+    def get_trending_today(self) -> List[dict]:
         """
         Get tools discovered today, sorted by hype score
         

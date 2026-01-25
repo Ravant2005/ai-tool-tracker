@@ -67,10 +67,13 @@ def ingest_producthunt():
                 
                 # Insert to database
                 result = db.insert_tool(ai_tool)
-                inserted += 1
-                
-                logger.info(f"✅ Inserted PH tool: {ai_tool.name} | ID: {result.get('id', 'unknown')}")
-            
+                if result:
+                    inserted += 1
+                    logger.info(f"✅ Inserted PH tool: {ai_tool.name} | ID: {result.get('id', 'unknown')}")
+                else:
+                    failed += 1
+                    logger.warning(f"DB insert failed for {product.get('name', 'Unknown')}, no error but no data returned.")
+
             except Exception as e:
                 failed += 1
                 logger.error(f"❌ Failed to insert {product.get('name', 'Unknown')}: {str(e)}")

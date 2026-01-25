@@ -78,7 +78,7 @@ class DailyJob:
         
         try:
             # Get tools discovered today
-            new_tools = await db.get_trending_today()
+            new_tools = db.get_trending_today()
             logger.info(f"Found {len(new_tools)} new tools to analyze")
             
             analyzed_count = 0
@@ -88,7 +88,7 @@ class DailyJob:
                     updated_data = ai_analyzer.analyze_tool(tool)
                     
                     # Update the tool with AI analysis
-                    await db.update_tool(
+                    db.update_tool(
                         tool['id'],
                         {
                             'summary': updated_data.get('summary'),
