@@ -19,14 +19,18 @@ export async function getAllTools(filters: ToolFilters = {}) {
     const response = await axios.get(`${API_BASE_URL}/api/tools`);
     let tools = response.data;
 
+    // Normalize filters
+    const category = filters.category?.trim();
+    const pricing = filters.pricing?.trim().toLowerCase();
+
     // Client-side filtering
-    if (filters.category && filters.category.trim() !== '') {
-      tools = tools.filter((tool: any) => tool.category === filters.category);
+    if (category) {
+      tools = tools.filter((tool: any) => tool.category === category);
     }
 
-    if (filters.pricing && filters.pricing.trim() !== '') {
+    if (pricing) {
       tools = tools.filter((tool: any) => 
-        tool.pricing?.toLowerCase() === filters.pricing.toLowerCase()
+        tool.pricing?.toLowerCase() === pricing
       );
     }
 
