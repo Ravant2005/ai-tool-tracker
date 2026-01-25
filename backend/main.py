@@ -52,36 +52,19 @@ async def root():
     }
 
 @app.get("/api/tools", response_model=List[dict])
-async def get_all_tools(
-    limit: int = 100,
-    category: Optional[str] = None,
-    pricing: Optional[str] = None
-):
+async def get_all_tools():
     """
-    Get all AI tools
-    
-    Query Parameters:
-    - limit: Maximum number of tools (default: 100)
-    - category: Filter by category (e.g., "NLP", "Computer Vision")
-    - pricing: Filter by pricing ("free", "freemium", "paid")
-    
-    Returns:
-        List of AI tools sorted by hype score
+    Get ALL AI tools from database without any filters
+    Returns all tools sorted by created_at descending
     """
     try:
-        logger.info(f"Fetching tools (limit: {limit}, category: {category}, pricing: {pricing})")
+        # Direct query to return ALL tools without filters
+        response = db.client.table('ai_tools').select("*").order('created_at', desc=True).execute()
+        tools = response.data
         
-        # Get all tools from database
-        tools = await db.get_all_tools(limit=limit)
+        logger.info(f"TOOLS COUNT: {len(tools)}")
+        logger.info(f"Sources found: {set(t.get('source') for t in tools)}")
         
-        # Apply filters
-        if category:
-            tools = [t for t in tools if t.get('category') == category]
-        
-        if pricing:
-            tools = [t for t in tools if t.get('pricing') == pricing]
-        
-        logger.info(f"Returning {len(tools)} tools")
         return tools
     
     except Exception as e:
@@ -118,15 +101,13 @@ async def get_tool_by_id(tool_id: int):
         Tool details
     """
     try:
-        # For now, get all tools and find by ID
-        # (In production, would query database directly)
-        tools = await db.get_all_tools(limit=1000)
-        tool = next((t for t in tools if t.get('id') == tool_id), None)
+        # Direct query by ID
+        response = db.client.table('ai_tools').select("*").eq('id', tool_id).execute()
         
-        if not tool:
+        if not response.data:
             raise HTTPException(status_code=404, detail="Tool not found")
         
-        return tool
+        return response.data[0]
     
     except HTTPException:
         raise
@@ -143,7 +124,10 @@ async def get_stats():
         Dashboard statistics
     """
     try:
-        tools = await db.get_all_tools(limit=1000)
+        # Direct query for all tools
+        response = db.client.table('ai_tools').select("*").execute()
+        tools = response.data
+        
         trending = await db.get_trending_today()
         
         # Calculate stats
@@ -178,7 +162,9 @@ async def get_categories():
         List of unique categories with counts
     """
     try:
-        tools = await db.get_all_tools(limit=1000)
+        # Direct query for all tools
+        response = db.client.table('ai_tools').select("*").execute()
+        tools = response.data
         
         # Count categories
         category_counts = {}
@@ -300,7 +286,7 @@ async def startup_event():
     """
     Runs when server starts
     """
-    logger.info("🚀 AI Tool Tracker API Starting...")
+    logger.info("AI Tool Tracker API Starting...")
     logger.info("=" * 60)
     logger.info("Server is ready!")
     logger.info("Visit: http://localhost:8000")
@@ -312,7 +298,7 @@ async def shutdown_event():
     """
     Runs when server stops
     """
-    logger.info("👋 AI Tool Tracker API Shutting down...")
+    logger.info("AI Tool Tracker API Shutting down...")
 
 # ============== RUN SERVER ==============
 
