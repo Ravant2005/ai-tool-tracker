@@ -17,7 +17,6 @@ from scraper.github_scraper import github_scraper
 from scraper.producthunt_ingest import ingest_producthunt
 from scraper.huggingface_ingest import ingest_huggingface
 from scraper.github_ingest import ingest_github
-from ai_engine.analyzer import ai_analyzer
 from database.connection import db
 from database.models import AITool
 
@@ -74,42 +73,15 @@ class DailyJob:
             logger.error(f"Error during ingestion: {str(e)}")
         
         # Step 2: Get newly inserted tools from database
-        logger.info("\nPHASE 2: AI ANALYSIS")
+        logger.info("\nPHASE 2: SUMMARY")
         
         try:
             # Get tools discovered today
             new_tools = db.get_trending_today()
-            logger.info(f"Found {len(new_tools)} new tools to analyze")
+            logger.info(f"Found {len(new_tools)} tools discovered today")
             
-            analyzed_count = 0
-            for tool in new_tools:
-                try:
-                    # Run AI analysis
-                    updated_data = ai_analyzer.analyze_tool(tool)
-                    
-                    # Update the tool with AI analysis
-                    db.update_tool(
-                        tool['id'],
-                        {
-                            'summary': updated_data.get('summary'),
-                            'use_cases': updated_data.get('use_cases', []),
-                            'category': updated_data.get('category'),
-                            'hype_score': updated_data.get('hype_score', tool.get('hype_score', 50)),
-                            'pricing': updated_data.get('pricing'),
-                            'updated_at': datetime.now().isoformat()
-                        }
-                    )
-                    analyzed_count += 1
-                    logger.info(f"  Analyzed: {tool.get('name')}")
-                
-                except Exception as e:
-                    logger.error(f"  Analysis failed for {tool.get('name')}: {str(e)}")
-                    continue
-            
-            logger.info(f"\nAnalyzed {analyzed_count} tools")
-        
         except Exception as e:
-            logger.error(f"Error during AI analysis: {str(e)}")
+            logger.error(f"Error during summary: {str(e)}")
         
         # Step 3: Final summary
         total_inserted = sum(
@@ -130,24 +102,28 @@ class DailyJob:
         logger.info(f"   Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info("=" * 60)
     
-    async def test_run(self):
+    def test_run(self):
         """
         Test run with limited scraping (for development)
         """
         logger.info("TEST RUN - Limited ingestion")
         
-        # Hugging Face ingestion  
-        hf_result = ingest_huggingface()
-        
-        # GitHub ingestion
-        gh_result = ingest_github()
-        
-        logger.info(f"Test results: HF={hf_result}, GH={gh_result}")
-        
-        return {
-            "huggingface": hf_result,
-            "github": gh_result
-        }
+        try:
+            # Hugging Face ingestion  
+            hf_result = ingest_huggingface()
+            
+            # GitHub ingestion
+            gh_result = ingest_github()
+            
+            logger.info(f"Test results: HF={hf_result}, GH={gh_result}")
+            
+            return {
+                "huggingface": hf_result,
+                "github": gh_result
+            }
+        except Exception as e:
+            logger.error(f"Test run failed: {str(e)}")
+            return {"error": str(e)}
 
 # Create job instance
 daily_job = DailyJob()
