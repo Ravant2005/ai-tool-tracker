@@ -16,17 +16,25 @@ interface ToolFilters {
 
 export async function getAllTools(filters: ToolFilters = {}) {
   try {
-    const params = new URLSearchParams();
+    const response = await axios.get(`${API_BASE_URL}/api/tools`);
+    let tools = response.data;
 
-    if (filters.category) params.append('category', filters.category);
-    if (filters.pricing) params.append('pricing', filters.pricing);
-    if (filters.limit) params.append('limit', filters.limit.toString());
+    // Client-side filtering
+    if (filters.category && filters.category.trim() !== '') {
+      tools = tools.filter((tool: any) => tool.category === filters.category);
+    }
 
-    const response = await axios.get(
-      `${API_BASE_URL}/api/tools?${params.toString()}`
-    );
+    if (filters.pricing && filters.pricing.trim() !== '') {
+      tools = tools.filter((tool: any) => 
+        tool.pricing?.toLowerCase() === filters.pricing.toLowerCase()
+      );
+    }
 
-    return response.data;
+    if (filters.limit) {
+      tools = tools.slice(0, filters.limit);
+    }
+
+    return tools;
   } catch (error) {
     console.error('Error fetching tools:', error);
     return [];
