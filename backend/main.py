@@ -33,8 +33,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Local development
-        "https://ai-tool-tracker-six.vercel.app",  # Production frontend
-        "https://*.vercel.app",   # All Vercel deployments
+        "https://*.vercel.app",   # Vercel deployments
+        "https://*.netlify.app",  # Netlify deployments
+        "*",  # Allow all (for testing - remove in production)
     ],
     allow_credentials=True,
     allow_methods=["*"],
