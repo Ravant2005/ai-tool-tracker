@@ -113,35 +113,25 @@ class Database:
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
-        # Validate environment variables with clear, actionable error messages
+        # Validate environment variables with clear, CI/CD-friendly error messages
         if not supabase_url:
             raise ValueError(
-                "FATAL: SUPABASE_URL environment variable is not set. "
-                "Please go to your deployment service (e.g., Render), navigate to your backend service's "
-                "environment settings, and add this variable. You can find the URL in your Supabase "
-                "project's API settings."
+                "SUPABASE_URL environment variable not set. "
+                "Set it in: GitHub Actions secrets, Render dashboard, or local .env file."
             )
-
-        if not supabase_key or not isinstance(supabase_key, str):
+        
+        if not supabase_key:
             raise ValueError(
-                "FATAL: SUPABASE_SERVICE_ROLE_KEY environment variable is not set or is empty. "
-                "This is a critical secret. Please go to your deployment service (e.g., Render), navigate "
-                "to your backend service's environment settings, and add this variable. Use the 'service_role' "
-                "key from your Supabase project's API settings."
+                "SUPABASE_SERVICE_ROLE_KEY environment variable not set. "
+                "Set it in: GitHub Actions secrets, Render dashboard, or local .env file."
             )
 
         # Basic format validation to catch common mistakes
         if not supabase_key.startswith("eyJ"):
-            error_message = (
-                "FATAL: The provided SUPABASE_SERVICE_ROLE_KEY appears to be invalid.\n"
-                "Common reasons for this error are:\n"
-                "1. The key is incorrect or incomplete.\n"
-                "2. You might be using the 'anon' key instead of the 'service_role' key.\n"
-                "3. The environment variable was not set correctly in your deployment service (e.g., Render).\n\n"
-                "Please double-check that you have copied the full 'service_role' key from your "
-                "Supabase project's API settings and set it as an environment variable for your backend service."
+            raise ValueError(
+                "SUPABASE_SERVICE_ROLE_KEY appears invalid (should start with 'eyJ'). "
+                "Ensure you're using the service_role key, not the anon key."
             )
-            raise ValueError(error_message)
         
         # Create connection to database with error handling
         try:
