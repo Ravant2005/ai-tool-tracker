@@ -65,13 +65,18 @@ Instance Type: Free
 #### D. Add Environment Variables
 Click "Environment" → "Add Environment Variable"
 
-**Required Variables:**
+**REQUIRED Variables (2):**
 ```
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-ENVIRONMENT=production
-PORT=8000
 ```
+
+**OPTIONAL Variable (for AI summaries):**
+```
+HUGGINGFACE_API_KEY=hf_xxxxx  # Optional - enables AI-powered summaries
+```
+
+**Note:** App works perfectly without Hugging Face key. It will use simple text truncation instead of AI summaries.
 
 **Get Supabase Credentials:**
 1. Go to https://supabase.com/dashboard
@@ -80,6 +85,12 @@ PORT=8000
 4. Copy:
    - Project URL → `SUPABASE_URL`
    - service_role key → `SUPABASE_SERVICE_ROLE_KEY`
+
+**Get Hugging Face Key (Optional):**
+1. Go to https://huggingface.co
+2. Sign up (free)
+3. Settings → Access Tokens
+4. Create token → Copy `hf_xxxxx`
 
 #### E. Deploy
 1. Click "Create Web Service"
