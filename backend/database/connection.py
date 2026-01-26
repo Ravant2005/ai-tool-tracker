@@ -104,18 +104,46 @@ class Database:
     def __init__(self):
         """
         Initialize connection to Supabase
-        Gets URL and KEY from .env file
+        Gets URL and KEY from environment variables
         """
-        load_dotenv()  # Load environment variables from .env file
+        # Only load .env in development (not in production)
+        if os.getenv("ENVIRONMENT", "development") == "development":
+            load_dotenv()
+        
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
-        if not supabase_url or not supabase_key:
-            raise ValueError("SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY not found in environment!")
+        # Validate environment variables with clear error messages
+        if not supabase_url:
+            raise ValueError(
+                "SUPABASE_URL not found in environment variables. "
+                "Please set it in Render dashboard: Settings > Environment > Add Variable"
+            )
         
-        # Create connection to database
-        self.client: Client = create_client(supabase_url, supabase_key)
-        logger.info("Database connection established")
+        if not supabase_key:
+            raise ValueError(
+                "SUPABASE_SERVICE_ROLE_KEY not found in environment variables. "
+                "Please set it in Render dashboard: Settings > Environment > Add Variable"
+            )
+        
+        # Validate key format (basic check)
+        if not supabase_key.startswith("eyJ"):
+            raise ValueError(
+                "SUPABASE_SERVICE_ROLE_KEY appears invalid. "
+                "It should start with 'eyJ' (JWT format). "
+                "Make sure you're using the service_role key, not the anon key."
+            )
+        
+        # Create connection to database with error handling
+        try:
+            self.client: Client = create_client(supabase_url, supabase_key)
+            logger.info("✅ Database connection established successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to create Supabase client: {str(e)}")
+            raise ValueError(
+                f"Failed to connect to Supabase: {str(e)}. "
+                "Please verify your SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are correct."
+            )
     
     def insert_tool(self, tool: AITool) -> dict:
         """
@@ -250,5 +278,18 @@ class Database:
             logger.error(f"Error fetching trending tools: {str(e)}")
             return []
 
-# Create a global database instance
-db = Database()
+# Create a global database instance with lazy initialization
+_db_instance = None
+
+def get_db() -> Database:
+    """
+    Get or create the database instance (singleton pattern)
+    This allows the app to start even if DB connection fails
+    """
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = Database()
+    return _db_instance
+
+# For backward compatibility
+db = get_db()

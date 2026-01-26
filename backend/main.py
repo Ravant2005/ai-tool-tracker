@@ -59,20 +59,44 @@ async def root():
 @app.get("/health")
 async def health_check():
     """
-    Health check endpoint for monitoring
+    Comprehensive health check endpoint for monitoring
+    Tests: API, Database connection, Environment variables
     """
-    try:
-        # Test database connection
-        response = db.client.table('ai_tools').select('count').limit(1).execute()
-        db_status = "healthy" if response else "unhealthy"
-    except Exception:
-        db_status = "unhealthy"
+    import os
     
-    return {
-        "status": "healthy" if db_status == "healthy" else "degraded",
-        "database": db_status,
-        "timestamp": datetime.now().isoformat()
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "checks": {}
     }
+    
+    # Check 1: API is responding
+    health_status["checks"]["api"] = "healthy"
+    
+    # Check 2: Environment variables
+    env_vars = {
+        "SUPABASE_URL": bool(os.getenv("SUPABASE_URL")),
+        "SUPABASE_SERVICE_ROLE_KEY": bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+        "HUGGINGFACE_API_KEY": bool(os.getenv("HUGGINGFACE_API_KEY")),
+    }
+    
+    missing_vars = [k for k, v in env_vars.items() if not v]
+    if missing_vars:
+        health_status["checks"]["environment"] = f"missing: {', '.join(missing_vars)}"
+        health_status["status"] = "degraded"
+    else:
+        health_status["checks"]["environment"] = "healthy"
+    
+    # Check 3: Database connection
+    try:
+        response = db.client.table('ai_tools').select('id').limit(1).execute()
+        health_status["checks"]["database"] = "healthy"
+        health_status["checks"]["database_tools_count"] = len(response.data)
+    except Exception as e:
+        health_status["checks"]["database"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "unhealthy"
+    
+    return health_status
 
 @app.get("/api/tools", response_model=List[dict])
 async def get_all_tools():
