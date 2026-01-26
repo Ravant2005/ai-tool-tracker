@@ -217,7 +217,7 @@ CREATE INDEX idx_discovered_date ON ai_tools(discovered_date DESC);
 ### Backend (.env)
 ```bash
 SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 HUGGINGFACE_API_KEY=your_hf_token  # Optional but recommended
 ```
 

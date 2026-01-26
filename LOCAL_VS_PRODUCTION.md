@@ -20,7 +20,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000  ✅ Correct
 **Backend (.env):**
 ```bash
 SUPABASE_URL=<SET_VIA_ENV_VARIABLE>  ❌ Placeholder
-SUPABASE_KEY=<SET_VIA_ENV_VARIABLE>  ❌ Placeholder
+SUPABASE_SERVICE_ROLE_KEY=<SET_VIA_ENV_VARIABLE>  ❌ Placeholder
 ```
 
 ### Why You See "0 Tools"
