@@ -16,14 +16,14 @@ export default function StatsCard({ icon: Icon, label, value, color = "blue" }: 
     };
     
     return (
-        <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow`}>
+        <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl p-6 text-white shadow-md hover:shadow-lg transition-shadow duration-200`}>
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm opacity-90 mb-1">{label}</p>
+                    <p className="text-sm font-medium opacity-90 mb-2">{label}</p>
                     <p className="text-3xl font-bold">{value}</p>
                 </div>
                 <div className="bg-white bg-opacity-20 p-3 rounded-lg">
-                    <Icon className="w-8 h-8" />
+                    <Icon className="w-7 h-7" />
                 </div>
             </div>
         </div>
