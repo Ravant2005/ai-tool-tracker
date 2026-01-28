@@ -2,7 +2,7 @@
 
 > **Automated SaaS platform that discovers, analyzes, and tracks trending AI tools daily**
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://ai-tool-tracker-six.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://yovaan-ai-tools.netlify.app/)
 
 ---
 
@@ -68,11 +68,11 @@
 
 ### DevOps & Infrastructure
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-black?logo=github)
-![Vercel](https://img.shields.io/badge/Vercel-Hosting-black?logo=vercel)
+![netlify](https://img.shields.io/badge/Vercel-Hosting-black?logo=vercel)
 ![Render](https://img.shields.io/badge/Render-API_Hosting-purple?logo=render)
 
 - **GitHub Actions** - Automated daily scraping
-- **Vercel** - Frontend hosting with edge network
+- **netlify** - Frontend hosting with edge network
 - **Render** - Backend API hosting with auto-scaling
 - **Git** - Version control
 
@@ -286,9 +286,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 **Ravant Vignesh**
 
-- LinkedIn: [Your LinkedIn Profile](https://linkedin.com/in/yourprofile)
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Portfolio: [yourwebsite.com](https://yourwebsite.com)
+- LinkedIn: [Your LinkedIn Profile](https://www.linkedin.com/in/s-ravant-vignesh-384b01373/)
+
 
 ---
 
@@ -311,7 +310,7 @@ Give a ⭐️ if this project helped you learn something new!
 
 **Built with ❤️ and lots of coffee ☕**
 
-[Live Demo](YOUR_VERCEL_URL) • [Report Bug](YOUR_GITHUB_URL/issues) • [Request Feature](YOUR_GITHUB_URL/issues)
+[Live Demo](https://yovaan-ai-tools.netlify.app/)
 
 </div>
 ```
