@@ -24,17 +24,17 @@ interface ToolCardProps {
 export default function ToolCard({ tool }: ToolCardProps) {
     const getHypeColor = (score?: number) => {
         if (!score) return 'text-gray-500';
-        if (score >= 80) return 'text-red-500';
-        if (score >= 60) return 'text-orange-500';
-        if (score >= 40) return 'text-yellow-500';
+        if (score >= 80) return 'text-[#F4C430]';
+        if (score >= 60) return 'text-[#5B2D8B]';
+        if (score >= 40) return 'text-[#5B2D8B]';
         return 'text-gray-500';
     };
     
     const getPricingColor = (pricing?: string) => {
         switch (pricing) {
             case 'free': return 'bg-green-100 text-green-800';
-            case 'freemium': return 'bg-blue-100 text-blue-800';
-            case 'paid': return 'bg-purple-100 text-purple-800';
+            case 'freemium': return 'bg-[#5B2D8B]/10 text-[#5B2D8B]';
+            case 'paid': return 'bg-[#F4C430]/20 text-[#5B2D8B]';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
@@ -47,15 +47,15 @@ export default function ToolCard({ tool }: ToolCardProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             whileHover={{ y: -4 }}
-            className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-200 hover:border-purple-300 h-full flex flex-col group"
+            className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-200 hover:border-[#5B2D8B] h-full flex flex-col group"
         >
             <div className="p-6 flex-1 flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
+                        <h3 className="text-lg font-semibold text-[#1E1E2F] mb-2 truncate">
                             {tool.name}
                         </h3>
-                        <span className="inline-block px-2.5 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded-md">
+                        <span className="inline-block px-2.5 py-1 text-xs font-medium bg-[#5B2D8B]/10 text-[#5B2D8B] rounded-md">
                             {tool.category || 'General AI'}
                         </span>
                     </div>
@@ -96,7 +96,7 @@ export default function ToolCard({ tool }: ToolCardProps) {
                     
                     {tool.github_stars && tool.github_stars > 0 && (
                         <div className="flex items-center text-gray-600 text-sm">
-                            <Star className="w-3.5 h-3.5 mr-1 fill-yellow-400 stroke-yellow-400" />
+                            <Star className="w-3.5 h-3.5 mr-1 fill-[#F4C430] stroke-[#F4C430]" />
                             <span className="text-xs font-medium">{tool.github_stars.toLocaleString()}</span>
                         </div>
                     )}
@@ -105,7 +105,7 @@ export default function ToolCard({ tool }: ToolCardProps) {
                         href={tool.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center text-purple-600 hover:text-purple-700 text-sm font-medium transition-colors"
+                        className="flex items-center text-[#5B2D8B] hover:text-[#3A1C6B] text-sm font-medium transition-colors"
                         whileHover={{ x: 3 }}
                     >
                         Visit

@@ -68,10 +68,10 @@ export default function ToolsClient() {
     
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+            <div className="min-h-screen bg-[#F7F7FB] flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-600">Loading AI tools...</p>
+                    <Loader2 className="w-12 h-12 text-[#5B2D8B] animate-spin mx-auto mb-4" />
+                    <p className="text-[#1E1E2F]">Loading AI tools...</p>
                 </div>
             </div>
         );
@@ -84,12 +84,12 @@ export default function ToolsClient() {
             
             <main className="container mx-auto px-4 py-10">
                 <section className="mb-16">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-8">Dashboard Overview</h2>
+                    <h2 className="text-3xl font-bold text-[#1E1E2F] mb-8">Dashboard Overview</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                        <StatsCard icon={Package} label="Total AI Tools" value={stats.total_tools} color="blue" />
+                        <StatsCard icon={Package} label="Total AI Tools" value={stats.total_tools} color="purple" />
                         <StatsCard icon={Sparkles} label="New Today" value={stats.new_today} color="purple" />
-                        <StatsCard icon={TrendingUp} label="Avg Hype Score" value={stats.avg_hype_score} color="green" />
-                        <StatsCard icon={Target} label="Top Category" value={stats.top_category} color="orange" />
+                        <StatsCard icon={TrendingUp} label="Avg Hype Score" value={stats.avg_hype_score} color="purple" />
+                        <StatsCard icon={Target} label="Top Category" value={stats.top_category} color="purple" />
                     </div>
                 </section>
                 
@@ -101,8 +101,8 @@ export default function ToolsClient() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <TrendingUp className="w-7 h-7 text-purple-600 mr-3" />
-                            <h2 className="text-3xl font-bold text-gray-900">Trending Today</h2>
+                            <TrendingUp className="w-7 h-7 text-[#5B2D8B] mr-3" />
+                            <h2 className="text-3xl font-bold text-[#1E1E2F]">Trending Today</h2>
                         </motion.div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {trendingTools.slice(0, 6).map((tool, index) => (
@@ -129,7 +129,7 @@ export default function ToolsClient() {
                 
                 <section>
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-3xl font-bold text-gray-900">All AI Tools</h2>
+                        <h2 className="text-3xl font-bold text-[#1E1E2F]">All AI Tools</h2>
                         <span className="text-gray-600 font-medium">{tools.length} tools found</span>
                     </div>
                     
@@ -138,7 +138,7 @@ export default function ToolsClient() {
                             <p className="text-gray-600 mb-4 text-lg">No tools found</p>
                             <button
                                 onClick={() => { setSelectedCategory(''); setSelectedPricing(''); }}
-                                className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                                className="px-6 py-2.5 bg-[#5B2D8B] text-white rounded-lg hover:bg-[#3A1C6B] transition-colors font-medium"
                             >
                                 Clear Filters
                             </button>
@@ -151,7 +151,7 @@ export default function ToolsClient() {
                 </section>
             </main>
             
-            <footer className="bg-gray-900 text-white py-12 mt-20 relative z-10">
+            <footer className="bg-[#1E1E2F] text-white py-12 mt-20 relative z-10">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="flex flex-col items-center justify-center space-y-4"
@@ -167,7 +167,7 @@ export default function ToolsClient() {
                             href="https://www.linkedin.com/in/s-ravant-vignesh-384b01373/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-blue-600 transition-colors duration-200"
+                            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#5B2D8B] hover:bg-[#F4C430] hover:text-[#1E1E2F] transition-all duration-200"
                             aria-label="LinkedIn Profile"
                             whileHover={{ scale: 1.15, rotate: 5 }}
                             whileTap={{ scale: 0.95 }}

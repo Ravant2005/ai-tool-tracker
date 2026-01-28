@@ -5,9 +5,9 @@ import { motion } from 'framer-motion';
 
 export default function Header() {
     return (
-        <header className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 text-white shadow-lg overflow-hidden">
+        <header className="relative bg-gradient-to-r from-[#5B2D8B] to-[#3A1C6B] text-white shadow-lg overflow-hidden">
             <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-400/20 to-cyan-400/20"
+                className="absolute inset-0 bg-gradient-to-r from-[#5B2D8B]/20 to-[#3A1C6B]/20"
                 animate={{
                     backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                 }}
@@ -31,11 +31,11 @@ export default function Header() {
                             whileHover={{ scale: 1.1, rotate: 5 }}
                             transition={{ type: 'spring', stiffness: 300 }}
                         >
-                            <Sparkles className="w-6 h-6 text-purple-600" />
+                            <Sparkles className="w-6 h-6 text-[#F4C430]" />
                         </motion.div>
                         <div>
                             <h1 className="text-2xl font-bold">AI Tool Tracker</h1>
-                            <p className="text-sm text-purple-100">
+                            <p className="text-sm text-white/80">
                                 Discover trending AI tools daily
                             </p>
                         </div>

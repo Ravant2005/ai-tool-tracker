@@ -32,15 +32,15 @@ export default function FilterBar({
         <motion.div
             className={clsx(
                 'bg-white rounded-xl shadow-md p-6 mb-8 transition-all duration-300',
-                hasActiveFilters && 'ring-2 ring-purple-300 shadow-lg'
+                hasActiveFilters && 'ring-2 ring-[#5B2D8B] shadow-lg'
             )}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
         >
             <div className="flex items-center mb-4">
-                <Filter className="w-5 h-5 text-purple-600 mr-2" />
-                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                <Filter className="w-5 h-5 text-[#5B2D8B] mr-2" />
+                <h2 className="text-lg font-semibold text-[#1E1E2F]">Filters</h2>
             </div>
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -51,7 +51,7 @@ export default function FilterBar({
                     <select
                         value={selectedCategory}
                         onChange={(e) => onCategoryChange(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B2D8B] focus:border-transparent"
                     >
                         <option value="">All Categories</option>
                         {categories.map((cat) => (
@@ -74,7 +74,7 @@ export default function FilterBar({
                                 className={clsx(
                                     'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                                     (option === 'all' && !selectedPricing) || selectedPricing === option
-                                        ? 'bg-purple-600 text-white shadow-md'
+                                        ? 'bg-[#5B2D8B] text-[#F4C430] shadow-md font-semibold'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 )}
                                 whileHover={{ scale: 1.05 }}
