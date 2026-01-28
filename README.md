@@ -286,7 +286,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 **Ravant Vignesh**
 
-- LinkedIn: [Your LinkedIn Profile](https://www.linkedin.com/in/s-ravant-vignesh-384b01373/)
+- LinkedIn: [LinkedIn Profile](https://www.linkedin.com/in/s-ravant-vignesh-384b01373/)
 
 
 ---
@@ -314,4 +314,5 @@ Give a ⭐️ if this project helped you learn something new!
 
 </div>
 ```
+
 
