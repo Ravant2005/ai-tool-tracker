@@ -1,4 +1,7 @@
+'use client';
+
 import { LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface StatsCardProps {
     icon: LucideIcon;
@@ -16,7 +19,13 @@ export default function StatsCard({ icon: Icon, label, value, color = "blue" }: 
     };
     
     return (
-        <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl p-6 text-white shadow-md hover:shadow-lg transition-shadow duration-200`}>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            whileHover={{ scale: 1.03, y: -2 }}
+            className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl p-6 text-white shadow-md hover:shadow-xl transition-shadow duration-200`}
+        >
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium opacity-90 mb-2">{label}</p>
@@ -26,6 +35,6 @@ export default function StatsCard({ icon: Icon, label, value, color = "blue" }: 
                     <Icon className="w-7 h-7" />
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

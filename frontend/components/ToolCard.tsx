@@ -1,4 +1,8 @@
+'use client';
+
 import { ExternalLink, Star, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import clsx from 'clsx';
 
 interface Tool {
     id: number;
@@ -35,8 +39,16 @@ export default function ToolCard({ tool }: ToolCardProps) {
         }
     };
     
+    const isHighHype = (tool.hype_score || 0) >= 70;
+    
     return (
-        <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-200 overflow-hidden border border-gray-200 hover:border-purple-300 h-full flex flex-col">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            whileHover={{ y: -4 }}
+            className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-200 hover:border-purple-300 h-full flex flex-col group"
+        >
             <div className="p-6 flex-1 flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
@@ -49,10 +61,14 @@ export default function ToolCard({ tool }: ToolCardProps) {
                     </div>
                     
                     <div className="flex items-center space-x-1 ml-3 flex-shrink-0">
-                        <TrendingUp className={`w-4 h-4 ${getHypeColor(tool.hype_score)}`} />
-                        <span className={`text-base font-semibold ${getHypeColor(tool.hype_score)}`}>
+                        <TrendingUp className={clsx('w-4 h-4', getHypeColor(tool.hype_score))} />
+                        <motion.span
+                            className={clsx('text-base font-semibold', getHypeColor(tool.hype_score))}
+                            animate={isHighHype ? { scale: [1, 1.1, 1] } : {}}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        >
                             {tool.hype_score || 0}
-                        </span>
+                        </motion.span>
                     </div>
                 </div>
                 
@@ -85,15 +101,16 @@ export default function ToolCard({ tool }: ToolCardProps) {
                         </div>
                     )}
                     
-                    <a
+                    <motion.a
                         href={tool.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-purple-600 hover:text-purple-700 text-sm font-medium transition-colors"
+                        whileHover={{ x: 3 }}
                     >
                         Visit
                         <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                    </a>
+                    </motion.a>
                 </div>
             </div>
             
@@ -102,6 +119,6 @@ export default function ToolCard({ tool }: ToolCardProps) {
                     Source: <span className="font-medium text-gray-700">{tool.source}</span>
                 </span>
             </div>
-        </div>
+        </motion.div>
     );
 }
