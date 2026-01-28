@@ -1,9 +1,9 @@
 name: Daily AI Tool Scan
 
 on:
-  # Run every day at 12:00 UTC
+  # Run every day at 18:30 UTC
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '30 18 * * *'
   
   # Allow manual trigger
   workflow_dispatch:
