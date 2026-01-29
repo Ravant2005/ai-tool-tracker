@@ -2,7 +2,7 @@
 
 > **Automated SaaS platform that discovers, analyzes, and tracks trending AI tools daily**
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://yovaan-ai-tools.netlify.app/)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_Site-blue?style=for-the-badge)](https://yovaanai-tool-tracker.vercel.app/)
 
 ---
 
@@ -310,9 +310,10 @@ Give a ⭐️ if this project helped you learn something new!
 
 **Built with ❤️ and lots of coffee ☕**
 
-[Live Demo](https://yovaan-ai-tools.netlify.app/)
+[Live Project](https://yovaanai-tool-tracker.vercel.app/)
 
 </div>
 ```
+
 
 
